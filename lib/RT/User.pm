@@ -281,6 +281,31 @@ sub ValidateName {
     }
 }
 
+=head2 GenerateAnonymousName INT
+
+Generate a random username proceeded by 'anon_' and then a
+random string, Returns the AnonymousName string. The length of the
+random string can be set by providing an integer for character length.
+
+=cut
+
+sub GenerateAnonymousName {
+    my $self = shift;
+    my $length = shift;
+
+    my $invalid = 1;
+    my $name = '';
+
+    while ( $invalid ) {
+        my @Chars = ('a'..'z', 'A'..'Z', '1'..'9');
+        for (1..$length || 9) {
+            $name .= $Chars[int rand @Chars];
+        }
+        $invalid = !$self->ValidateName('anon_' . $name);
+    }
+    return 'anon_' . $name;
+}
+
 =head2 ValidatePassword STRING
 
 Returns either (0, "failure reason") or 1 depending on whether the given
