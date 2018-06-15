@@ -210,10 +210,16 @@
 % $m->callback( %ARGS, CallbackName => 'RightColumnBottom', UserObj => $UserObj );
 </td></tr>
 <tr>
-<td colspan="2">
+<td>
 <&| /Widgets/TitleBox, title => loc('Comments about this user'), class => 'user-info-comments' &>
 <textarea class="comments" name="Comments" cols="80" rows="5" wrap="virtual"><%$UserObj->Comments//$ARGS{Comments}//''%></textarea>
 </&>
+</td>
+<td>
+<& /Elements/UserRelatedInfo, UserObj => $UserObj &>
+</td></tr>
+
+<tr><td>
 %if (!$Create && $UserObj->Privileged) {
 <br />
 <&| /Widgets/TitleBox, title => loc('Signature'), class => 'user-info-signature' &>
@@ -233,7 +239,7 @@
 </form>
 
 % if ( $UserObj->Id ) {
-    <& /Elements/Modal, ModalId => "user-info-modal", Method => 'POST', Action => RT->Config->Get('WebPath') . '/Admin/Users/Modify.html', Fields => [
+    <& /Elements/Modal, Name => "user-info-modal", ModalId => "user-info-modal", Method => 'POST', Action => RT->Config->Get('WebPath') . '/Admin/Users/Modify.html', Fields => [
     { Label   => "Are you sure you want to anonymize user: ". $UserObj->Name . "?" },
     { Input => 'Hidden', Value => $UserObj->Id, Name => 'id' },
     { Input => 'Hidden', Value => 1, Name => 'Anonymize' },
@@ -306,6 +312,13 @@ if ($Create) {
         my ($code, $msg) = $UserObj->SetDisabled($ARGS{Disabled});
         push @results, $msg;
     }
+}
+
+if ( $ARGS{'Anonymize'} and $UserObj->Id ) {
+    my ($ret, $msg) = $UserObj->AnonymizeUser(clear_customfields => $ARGS{'clear_customfields'});
+    RT::Logger->error($msg) unless $ret;
+
+    $ARGS{'Anonymize'} = undef;
 }
 
 if ( $UserObj->Id ) {
