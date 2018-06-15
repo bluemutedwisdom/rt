@@ -306,6 +306,62 @@ sub GenerateAnonymousName {
     return 'anon_' . $name;
 }
 
+=head2 AnonymizeUser { clear_customfields }
+
+Remove all personal identifying information on the user record, but keep
+the user record alive. Additonally replace the username with an anonymous name.
+Submit clear_customfields in a paramhash, if true all customfield values
+applied to the user record will be cleared.
+
+=cut
+
+sub AnonymizeUser {
+    my $self = shift;
+    my %args = (
+        clear_customfields  => undef,
+        @_,
+    );
+
+    my @user_idenifying_info = qw (
+        Address1 Address2 City Comments Country EmailAddress
+        FreeformContactInfo Gecos HomePhone MobilePhone NickName Organization
+        PagerPhone RealName Signature SMIMECertificate State Timezone WorkPhone Zip
+    );
+
+    # Remove identifying user information from record
+    foreach my $attr (@user_idenifying_info) {
+        if ( length $self->$attr or !defined $self->$attr) {
+                my $method = 'Set' . $attr;
+                my ($ret, $msg) = $self->$method('');
+                return ($ret, $msg) unless $ret;
+        }
+    }
+
+    # Do not do anything if password is already unset
+    if ( $self->HasPassword ) {
+        my ($ret, $msg) = $self->SetPassword('*NO-PASSWORD*');
+        RT::Logger->error($msg) unless $ret;
+    }
+
+    # Generate the random anon username
+    my ($ret, $msg) = $self->SetName($self->GenerateAnonymousName);
+    RT::Logger->error($msg) unless $ret;
+
+    # Remove user customfield values
+    if ( $args{'clear_customfields'} ) {
+        my $customfields = RT::CustomFields->new(RT->SystemUser);
+        ($ret, $msg) = $customfields->LimitToLookupType('RT::User');
+        RT::Logger->error($msg) unless $ret;
+
+        while (my $customfield = $customfields->Next) {
+            ($ret, $msg) = $self->AddCustomFieldValue(Field => $customfield->Name, Value => '');
+            RT::Logger->error($msg) unless $ret;
+        }
+    }
+
+    return(1, 'User successfully anonymized');
+}
+
 =head2 ValidatePassword STRING
 
 Returns either (0, "failure reason") or 1 depending on whether the given
