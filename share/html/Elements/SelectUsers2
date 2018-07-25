@@ -45,17 +45,17 @@
 %# those contributions and any derivatives thereof.
 %#
 %# END BPS TAGGED BLOCK }}}
-<select name="<% $SelectFieldName %>">
+<select name="UserField2">
 % foreach my $col (@fields) {
-<option <% ($UserField eq $col->[0]) ? 'selected="selected"' : '' |n %> value="<% $col->[0] %>"><% loc($col->[1]) %></option>
+<option <% ($UserField2 eq $col->[0]) ? 'selected="selected"' : '' |n %> value="<% $col->[0] %>"><% loc($col->[1]) %></option>
 % }
 % while (my $CF = $CFs->Next) {
 %   my $val = "CustomField-" . $CF->Id;
-<option <% ($UserField eq $val) ? 'selected="selected"' : '' |n %> value="<% $val %>"><&|/l&>CustomField</&>: <% $CF->Name %></option>
+<option <% ($UserField2 eq $val) ? 'selected="selected"' : '' |n %> value="<% $val %>"><&|/l&>CustomField</&>: <% $CF->Name %></option>
 % }
 </select>
-<& /Elements/SelectMatch, Name => $SelectOpName, Default => $UserOp &>
-<input size="8" name="<% $InputStringName %>" value="<% $UserString %>" />
+<& /Elements/SelectMatch, Name => 'UserOp2', Default => $UserOp2 &>
+<input size="8" name="UserString2" value="<% $UserString2 %>" />
 <%INIT>
 my $CFs = RT::CustomFields->new($session{'CurrentUser'});
 $CFs->LimitToChildType('RT::User');
@@ -74,11 +74,8 @@ if ( $Fields and ref $Fields eq 'ARRAY' ) {
 }
 </%INIT>
 <%ARGS>
-$UserField  => ''
-$UserOp     => ''
-$UserString => ''
+$UserField2  => ''
+$UserOp2     => ''
+$UserString2 => ''
 $Fields     => undef
-$SelectFieldName => 'UserField'
-$SelectOpName => 'UserOp'
-$InputStringName => 'UserString'
 </%ARGS>
