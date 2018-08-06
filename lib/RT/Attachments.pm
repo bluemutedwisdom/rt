@@ -252,6 +252,55 @@ sub AddRecord {
     return $self->SUPER::AddRecord( $record );
 }
 
+=head2 ReplaceAttachments ( Search => 'SEARCH', Replacement => 'Replacement', Header => 1, Content => 1 )
+
+Provide a search string to search the attachments table for, by default the Headers and Content
+columns will both be searched for matches.
+
+=cut
+
+sub ReplaceAttachments {
+    my $self = shift;
+    my %args = (
+        Search      => undef,
+        Replacement => '',
+        Headers     => 1,
+        Content     => 1,
+        @_,
+    );
+
+    return (0, 'Provide a search string to search on') unless $args{Search};
+
+    $self->Limit(
+        ENTRYAGGREGATOR => 'OR',
+        FIELD           => 'Headers',
+        OPERATOR        => 'LIKE',
+        VALUE           => $args{Search},
+        SUBCLAUSE       => 'Attachments',
+    ) unless ! $args{Headers};
+
+    $self->Limit(
+        ENTRYAGGREGATOR => 'OR',
+        FIELD           => 'Content',
+        OPERATOR        => 'LIKE',
+        VALUE           => $args{Search},
+        SUBCLAUSE       => 'Attachments',
+    ) unless ! $args{Content};
+
+    while (my $attachment = $self->Next) {
+        if ( $args{Headers} ) {
+            my ($ret, $msg) = $attachment->ReplaceHeaders(Search => $args{Search}, Replacement => $args{Replacement});
+            return ($ret, $msg) unless $ret;
+        }
+        if ( $args{Content} ) {
+            my ($ret, $msg) = $attachment->ReplaceContent(Search => $args{Search}, Replacement => $args{Replacement});
+            return ($ret, $msg) unless $ret;
+        }
+    }
+    return (1, "No instances of $args{Search} where found in the attachments table") unless $self->Count;
+    return (1, "$args{Search} has been replaced with \"$args{Replacement}\"");
+}
+
 RT::Base->_ImportOverlays();
 
 1;
