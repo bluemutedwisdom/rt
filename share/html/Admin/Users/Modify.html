@@ -232,6 +232,20 @@
 % }
 </form>
 
+% if ( $UserObj->Id ) {
+    <& /Elements/Modal, ModalId => "user-info-modal", Method => 'POST', Action => RT->Config->Get('WebPath') . '/Admin/Users/Modify.html', Fields => [
+    { Label   => "Are you sure you want to anonymize user: ". $UserObj->Name . "?" },
+    { Input => 'Hidden', Value => $UserObj->Id, Name => 'id' },
+    { Input => 'Hidden', Value => 1, Name => 'Anonymize' },
+    {
+        Label    => "Check to clear user customfields:",
+        Input    => 'checkbox',
+        Class    => 'checkbox',
+        Name     => 'clear_customfields',
+    },
+]
+&>
+% }
 <%INIT>
 
 my $UserObj = RT::User->new($session{'CurrentUser'});
